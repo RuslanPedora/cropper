@@ -26,10 +26,10 @@
 					Remote
 				</label>
 				<br>
-				<input id='image-src' type='text'>
-				<input id='file-src' type='file' class='cropper-button'> 
+				<input id='image-src' type='text'>				
 				<button id='url-src' type='button' class='cropper-button'>Paste</button>
-				
+				<button id='file-browse' class='cropper-button'>Browse</button>
+				<input id='file-src' type='file' class='cropper-button' value='Browse'> 
 			</fieldset>
 		</form>
 		<div id='caption-bar'>
@@ -45,11 +45,11 @@
 			</div>
 		</div>
 		<div id='paint-container'>	
-			<canvas id='main-canvas'>
+			<canvas id='main-canvas' width=500 height=350>
 			</canvas>
+			<div id='image-selector'>
+			</div>
 			<div id='glass'>		
-				<div id='image-selector'>
-				</div>
 			</div>
 			<div id='image-wrapper'>
 				<img id='img-buffer'>				
@@ -59,18 +59,19 @@
 	<div id='cropped-container'>
 		Confirm cropped image
 		<br>
-		<canvas id='save-canvas'>
+		<canvas id='save-canvas'  width=500 height=350>
 		</canvas>
 		<br>
-		<button>
+		<button id='cancel-button' class='cropper-button'>
 			Cancel
 		</button>
-		<button>
+		<button id='replace-button' class='cropper-button'>
 			Replace
 		</button>
-		<button>
+		<button id='save-button' class='cropper-button'>
 			Save As
 		</button>
+		<a id='serv-link' href=''>utility</a>
 	</div>
 </div>
 <script src='cropper.js'></script>

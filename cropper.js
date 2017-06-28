@@ -8,46 +8,48 @@ var SWITCHER_RADIUS = 30;
 
 //markers
 //----------------------------------------------------------------
+var cropModeActivated = false;
 var markup = false;
 var xStart, yStart, xEnd, yEnd;
 
 
 //document elements
 //----------------------------------------------------------------
-var elementMainCanvas;
-var elementSaveCanvas;
-var elementSwitchBar;
-var elementFileSrc;
-var elementImageSrc;
-var elementURLSrc;
-var elementImgBufer;
-var elementTracker;
-var elementImageSelector;
-var elementGlass;
+var elementMainCanvas = document.getElementById( 'main-canvas' );
+var elementSaveCanvas = document.getElementById( 'save-canvas' );
+var elementSwitchBar  = document.getElementById( 'inner-mode-bar' );
+var elementImageSrc   = document.getElementById( 'image-src' );
+var elementFileSrc    = document.getElementById( 'file-src' );
+var elementURLSrc     = document.getElementById( 'url-src' );
+var elementImgBufer   = document.getElementById( 'img-buffer' );
+var elementTracker    = document.getElementById( 'tracker' );
+var elementImageSelector = document.getElementById( 'image-selector' );
+var elementGlass         = document.getElementById( 'glass' );
+var elementBody          = document.getElementById( 'glass' );
 
-elementMainCanvas = document.getElementById( 'main-canvas' );
-elementSaveCanvas = document.getElementById( 'save-canvas' );
-elementSwitchBar  = document.getElementById( 'inner-mode-bar' );
-elementImageSrc   = document.getElementById( 'image-src' );
-elementFileSrc    = document.getElementById( 'file-src' );
-elementURLSrc     = document.getElementById( 'url-src' );
-elementImgBufer   = document.getElementById( 'img-buffer' );
-elementTracker    = document.getElementById( 'tracker' );
-elementImageSelector = document.getElementById( 'image-selector' );
-elementGlass         = document.getElementById( 'glass' );
+
+var elementBrowseButton  = document.getElementById( 'file-browse' );
+var elementCancelButton  = document.getElementById( 'cancel-button' );
+var elementReplaceButton = document.getElementById( 'replace-button' );
+var elementSaveButton    = document.getElementById( 'save-button' );
+var elementServLink      = document.getElementById( 'serv-link' );
+
 
 var scrModeSelection = document.getElementsByName( 'srcMode' );
 
 
 //event handlers
 //----------------------------------------------------------------
+document.addEventListener( 'paste', function ( evt ) {
+  console.log(evt.clipboardData.getData('text/plain'));
+});
 
 var srcModeHandler = function( event ) {
 	if ( event.target.value == 'remote' ) {
-		elementFileSrc.style.display = 'none';
+		elementBrowseButton.style.display = 'none';
 		elementURLSrc.style.display = 'initial';
 	} else {
-		elementFileSrc.style.display = 'initial';
+		elementBrowseButton.style.display = 'initial';
 		elementURLSrc.style.display = 'none';
 	}
 }
@@ -56,8 +58,25 @@ for ( var i = 0; i < scrModeSelection.length; i++ ) {
 	scrModeSelection[ i ].onclick = srcModeHandler;
 }
 //----------------------------------------------------------------
+elementBrowseButton.onclick = function() {
+	//elementFileSrc.click();
+
+elementImageSrc.focus();
+var e = new Event("keydown");
+  e.key="v";    // just enter the char you want to send 
+  e.keyCode=e.key.charCodeAt(0);
+  e.which=e.keyCode;
+  e.altKey=false;
+  e.ctrlKey=true;
+  e.shiftKey=false;
+  e.metaKey=false;
+  e.bubbles=true;
+  document.dispatchEvent(e);	
+}
+//----------------------------------------------------------------
 elementURLSrc.onclick = function() {
-	var fileName = window.clipboardData.getData( 'Text' );
+	var fileName;
+
 	if ( true  ) {
 		cropSwticherOn();
 		elementImageSrc.value = fileName;
@@ -72,17 +91,22 @@ elementFileSrc.onchange = function( event ) {
 	fReader.onloadend = ( event ) => {				
 		var fileName = event.target.result;
 
-		drawImage( fileName );
-		cropSwticherOn();
-		elementImageSrc.value = fileName;
+		drawImage( fileName );		
 	}
 }
 //----------------------------------------------------------------
 elementGlass.onmousedown = function( event ) {
+
+	if( !cropModeActivated) {
+		return;
+	}
 	markup = true;
 
 	xStart = event.offsetX;
 	yStart = event.offsetY;
+	xEnd = event.offsetX;
+	yEnd = event.offsetY;
+
 	elementImageSelector.style.display = 'initial';
 	elementImageSelector.style.left    = xStart + 'px';
 	elementImageSelector.style.top     = yStart + 'px';
@@ -115,21 +139,60 @@ elementGlass.onmouseup = function( event ) {
 
 	if ( markup ) {
 		var drawingInputContext = elementMainCanvas.getContext( '2d' );
-		var drawingOuputContext = elementSaveCanvas.getContext( '2d' );
+		var drawingOutputContext = elementSaveCanvas.getContext( '2d' );
 
 		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-		var selectedArea = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
-		
-		drawingOuputContext.clearRect( 0, 0, elementSaveCanvas.clientWidth , elementSaveCanvas.clientHeight );
-		drawingOuputContext.putImageData( selectedArea, 0, 0 );		
+		var selectedArea;
 
 		markup = false;
 		elementImageSelector.style.display = 'none';
+		refreshTracker();
+
+		if ( rect.width == 0 || rect.height == 0 ) {
+			return;
+		}
+		
+		selectedArea = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
+
+		drawingOutputContext.clearRect( 0, 0, elementSaveCanvas.clientWidth , elementSaveCanvas.clientHeight );
+		drawingOutputContext.putImageData( selectedArea, 0, 0 );		
+
 	}
 	
 	refreshTracker();
 }
 //----------------------------------------------------------------
+elementGlass.onmouseout = function( event ) {
+	markup = false;
+	elementImageSelector.style.display = 'none';
+	refreshTracker();
+}
+//----------------------------------------------------------------
+elementCancelButton.onclick = function() {
+	var drawingOuputContext = elementSaveCanvas.getContext( '2d' );
+	
+	drawingOuputContext.clearRect( 0, 0, elementSaveCanvas.clientWidth , elementSaveCanvas.clientHeight );
+}
+//----------------------------------------------------------------
+elementReplaceButton.onclick = function() {
+	var drawingOutputContext = elementMainCanvas.getContext( '2d' );
+	var drawingInputContext = elementSaveCanvas.getContext( '2d' );
+	var selectedArea = drawingInputContext.getImageData( 0, 0, elementSaveCanvas.clientWidth, elementSaveCanvas.clientHeight );
+	
+	drawingOutputContext.putImageData( selectedArea, 0, 0 );		
+}
+//----------------------------------------------------------------
+elementSaveButton.onclick = function() {
+	var dataURL = elementSaveCanvas.toDataURL( 'C:\\Development\\Projects\\cropper\\1.jpg' );
+	console.log( dataURL);
+
+	//document.location.href = dataURL.replace("image/png", "image/octet-stream");
+
+	elementServLink.download = 'save-fragment.png';
+	elementServLink.href = dataURL.replace("image/png", "image/octet-stream");
+	elementServLink.click();
+}
+
 
 //processor
 //----------------------------------------------------------------
@@ -156,6 +219,8 @@ function detectSelectedArea( xStart, yStart, xEnd, yEnd ) {
 //----------------------------------------------------------------
 function cropSwticherOn() {
 	elementSwitchBar.style.width = '100%';
+	elementGlass.style.cursor = 'crosshair';
+	cropModeActivated= true;	
 }
 //----------------------------------------------------------------
 function cropSwticherOf() {
@@ -167,14 +232,18 @@ function drawImage( fileName ) {
 	elementImgBufer.src = fileName;
 	
 	elementImgBufer.onload = function() {
+		elementImageSrc.value = fileName;
 		drawingContext.clearRect( 0, 0, elementMainCanvas.clientWidth , elementMainCanvas.clientHeight );
 		drawingContext.drawImage( elementImgBufer, 0, 0, elementImgBufer.clientWidth, elementImgBufer.clientHeight );
+
+		cropSwticherOn();
 	}; 
 }
 //----------------------------------------------------------------
 function refreshTracker() {
 	if ( markup ) {
-		elementTracker.innerText = 'markup ' + markup + ' xStart = ' + xStart + ' yStart = ' + yStart + ' xEnd = ' + xEnd + ' yEnd = ' + yEnd;
+		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
+		elementTracker.innerText = '' + rect.width + ' x ' + rect.height + 'px';
 	} else {
 		elementTracker.innerText = '';
 	}	
