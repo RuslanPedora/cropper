@@ -1,0 +1,78 @@
+<!doctype>
+<html>
+<head>
+	<title>Cropper</title>
+	<meta name="author" content="Ruslan Pedora">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel='stylesheet' href='cropper.css' >
+	<!-- <link rel='stylesheet' href='resize.css' > -->
+	<link rel="shortcut icon" type="image/x-icon" href='logo.png'>	
+</head>
+<body>
+<div id='app-container'>
+	<div id='main-container'>
+		<form id='src-form'>
+			<fieldset>
+				<legend>
+					Image source
+				</legend>
+				<label>				
+					<input type='radio' name='srcMode' value='local' checked>
+					Local
+				</label>
+				<br>
+				<label>				
+					<input type='radio' name='srcMode' value='remote'>
+					Remote
+				</label>
+				<br>
+				<input id='image-src' type='text'>
+				<input id='file-src' type='file' class='cropper-button'> 
+				<button id='url-src' type='button' class='cropper-button'>Paste</button>
+				
+			</fieldset>
+		</form>
+		<div id='caption-bar'>
+			Target image
+			<span id='tracker'>
+
+			</span>
+			<div id='mode-bar' class='zero-font'>
+				<div id='inner-mode-bar' class='zero-font'>
+					<div id='mode-pointer' class='zero-font'>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id='paint-container'>	
+			<canvas id='main-canvas'>
+			</canvas>
+			<div id='glass'>		
+				<div id='image-selector'>
+				</div>
+			</div>
+			<div id='image-wrapper'>
+				<img id='img-buffer'>				
+			</div>	
+		</div>
+	</div>
+	<div id='cropped-container'>
+		Confirm cropped image
+		<br>
+		<canvas id='save-canvas'>
+		</canvas>
+		<br>
+		<button>
+			Cancel
+		</button>
+		<button>
+			Replace
+		</button>
+		<button>
+			Save As
+		</button>
+	</div>
+</div>
+<script src='cropper.js'></script>
+</body>
+</html>

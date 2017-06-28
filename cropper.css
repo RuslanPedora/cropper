@@ -1,0 +1,107 @@
+* {
+	margin: 0;
+}
+/*common--------------------------------------------------------------------------------*/
+.zero-font {
+	font-size: 0;
+}
+.cropper-button {
+	font-size: 20px;
+	padding: 5px;
+	background-color: rgb( 76, 175, 90 );
+	cursor: pointer;
+	outline: none;
+	border: none;
+}
+/*--------------------------------------------------------------------------------*/
+#app-container{
+	background-color: rgb( 240, 240, 240 );
+	width: 100%;
+	min-height: 80vh;
+}
+#src-form {
+	padding: 10px;
+}
+#url-src {
+	display: none;
+}
+#image-src {
+	width: 400px;
+}
+#caption-bar {
+	padding: 10px;
+}
+#mode-bar {
+	width: 60px;
+	height: 30px;
+	border-radius: 15px;
+	background: white;
+	position: relative;
+	float: right;
+}
+#inner-mode-bar {
+	position: absolute;	
+	right: 0;
+	height: 100%;
+	width: 30px;
+	border-radius: 15px;
+	background-color: green;
+	text-align: left;
+	transition: width 1s;
+}
+#mode-bar:hover #inner-mode-bar {
+	width: 30px;
+}
+#mode-pointer {
+	position: absolute;
+	left: 0%;
+	top: 0%;
+	height: 100%;	
+	width: 30px;
+	border-radius: 100%;
+	background-color: rgb( 200, 200, 200 );
+	z-index: 1;	
+}
+#paint-container {
+	position: relative;
+}
+#main-canvas, #glass, #image-wrapper, #save-canvas {
+	width: 450px;
+	height: 200px;
+}
+#paint-container canvas {
+	background-color: white;
+	border: 1px solid black;
+	position: relative;
+}
+#glass {
+	position: absolute;
+	left: 0;
+	top: 0;
+	background-color: transparent;
+	cursor: crosshair;
+	z-index: 2;
+}
+#image-selector {
+	display: none;
+	position: absolute;
+	border: 1px dashed black;
+	z-index: 1;
+}
+#image-wrapper {
+	border: 1px solid black; 
+}
+#image-wrapper img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+#cropped-container {
+/*	position: fixed;
+	display: none;
+*/
+	border: 1px solid green;
+}
+#save-canvas {
+	border: 1px solid black;
+}
