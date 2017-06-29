@@ -45,7 +45,7 @@
 			</div>
 		</div>
 		<div id='paint-container'>	
-			<canvas id='main-canvas' width=500 height=350>
+			<canvas id='main-canvas'>
 			</canvas>
 			<div id='image-selector'>
 			</div>
@@ -55,23 +55,26 @@
 				<img id='img-buffer'>				
 			</div>	
 		</div>
-	</div>
-	<div id='cropped-container'>
-		Confirm cropped image
-		<br>
-		<canvas id='save-canvas'  width=500 height=350>
-		</canvas>
-		<br>
-		<button id='cancel-button' class='cropper-button'>
-			Cancel
-		</button>
-		<button id='replace-button' class='cropper-button'>
-			Replace
-		</button>
-		<button id='save-button' class='cropper-button'>
-			Save As
-		</button>
-		<a id='serv-link' href=''>utility</a>
+
+		<div id='cropped-container'>
+			Confirm cropped image
+			<br>
+			<canvas id='save-canvas'  width=500 height=300>
+			</canvas>
+			<br>
+			<button id='cancel-button' class='cropper-button'>
+				Cancel
+			</button>
+			<button id='replace-button' class='cropper-button'>
+				Replace
+			</button>
+			<button id='save-button' class='cropper-button'>
+				Save As
+			</button>
+			<a id='serv-link' href=''>utility</a>
+		</div>
+
+
 	</div>
 </div>
 <script src='cropper.js'></script>

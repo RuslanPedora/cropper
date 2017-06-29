@@ -11,12 +11,14 @@ var SWITCHER_RADIUS = 30;
 var cropModeActivated = false;
 var markup = false;
 var xStart, yStart, xEnd, yEnd;
+var canvasTop, canvasLeft;
 
 
 //document elements
 //----------------------------------------------------------------
-var elementMainCanvas = document.getElementById( 'main-canvas' );
-var elementSaveCanvas = document.getElementById( 'save-canvas' );
+var elementMainCanvas     = document.getElementById( 'main-canvas' );
+var elementSaveCanvas     = document.getElementById( 'save-canvas' );
+var elementPaintContainer = document.getElementById( 'paint-container' );
 var elementSwitchBar  = document.getElementById( 'inner-mode-bar' );
 var elementImageSrc   = document.getElementById( 'image-src' );
 var elementFileSrc    = document.getElementById( 'file-src' );
@@ -59,19 +61,6 @@ for ( var i = 0; i < scrModeSelection.length; i++ ) {
 }
 //----------------------------------------------------------------
 elementBrowseButton.onclick = function() {
-	//elementFileSrc.click();
-
-elementImageSrc.focus();
-var e = new Event("keydown");
-  e.key="v";    // just enter the char you want to send 
-  e.keyCode=e.key.charCodeAt(0);
-  e.which=e.keyCode;
-  e.altKey=false;
-  e.ctrlKey=true;
-  e.shiftKey=false;
-  e.metaKey=false;
-  e.bubbles=true;
-  document.dispatchEvent(e);	
 }
 //----------------------------------------------------------------
 elementURLSrc.onclick = function() {
@@ -104,14 +93,17 @@ elementGlass.onmousedown = function( event ) {
 
 	xStart = event.offsetX;
 	yStart = event.offsetY;
-	xEnd = event.offsetX;
-	yEnd = event.offsetY;
+	xEnd = xStart;
+	yEnd = yStart;
+
+	canvasTop  = elementMainCanvas.offsetTop + elementPaintContainer.offsetTop;
+	canvasLeft = elementMainCanvas.offsetLeft + elementPaintContainer.offsetLeft;
+
+	maxymizeGlass();
 
 	elementImageSelector.style.display = 'initial';
-	elementImageSelector.style.left    = xStart + 'px';
-	elementImageSelector.style.top     = yStart + 'px';
-	elementImageSelector.style.width   = '1px';
-	elementImageSelector.style.height  = '1px';
+	rednerImageSelector( xStart, yStart, xEnd, yEnd )
+
 	refreshTracker();
 }
 //----------------------------------------------------------------
@@ -119,16 +111,10 @@ elementGlass.onmousemove = function( event ) {
 	var rect;
 
 	if ( markup ) {
-		xEnd = event.offsetX;
-		yEnd = event.offsetY;
+		xEnd = Math.min( Math.max( event.offsetX - canvasLeft, 0 ), elementMainCanvas.clientWidth );
+		yEnd = Math.min( Math.max( event.offsetY - canvasTop, 0 ), elementMainCanvas.clientHeight );
 
-		rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-
-		elementImageSelector.style.left  = rect.x + 'px';
-		elementImageSelector.style.width = rect.width + 'px';
-		elementImageSelector.style.top    = rect.y + 'px';
-		elementImageSelector.style.height = rect.height + 'px';
-	
+		rednerImageSelector( xStart, yStart, xEnd, yEnd );
 		refreshTracker();
 	}
 		
@@ -140,13 +126,18 @@ elementGlass.onmouseup = function( event ) {
 	if ( markup ) {
 		var drawingInputContext = elementMainCanvas.getContext( '2d' );
 		var drawingOutputContext = elementSaveCanvas.getContext( '2d' );
-
-		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
+		var rect;
 		var selectedArea;
 
 		markup = false;
+		xEnd = Math.min( Math.max( event.offsetX - canvasLeft, 0 ), elementMainCanvas.clientWidth );
+		yEnd = Math.min( Math.max( event.offsetY - canvasTop, 0 ), elementMainCanvas.clientHeight );
+
 		elementImageSelector.style.display = 'none';
+		minimizeGlass();
 		refreshTracker();
+
+		rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
 
 		if ( rect.width == 0 || rect.height == 0 ) {
 			return;
@@ -163,8 +154,11 @@ elementGlass.onmouseup = function( event ) {
 }
 //----------------------------------------------------------------
 elementGlass.onmouseout = function( event ) {
+	
 	markup = false;
 	elementImageSelector.style.display = 'none';
+
+	minimizeGlass();
 	refreshTracker();
 }
 //----------------------------------------------------------------
@@ -186,9 +180,7 @@ elementSaveButton.onclick = function() {
 	var dataURL = elementSaveCanvas.toDataURL( 'C:\\Development\\Projects\\cropper\\1.jpg' );
 	console.log( dataURL);
 
-	//document.location.href = dataURL.replace("image/png", "image/octet-stream");
-
-	elementServLink.download = 'save-fragment.png';
+	elementServLink.download = 'cropped-image.png';
 	elementServLink.href = dataURL.replace("image/png", "image/octet-stream");
 	elementServLink.click();
 }
@@ -196,23 +188,49 @@ elementSaveButton.onclick = function() {
 
 //processor
 //----------------------------------------------------------------
+function maxymizeGlass() {
+
+	elementGlass.style.position = 'fixed';
+	elementGlass.style.width    = '100vw';
+	elementGlass.style.height   = '100vh';
+}
+//----------------------------------------------------------------
+function minimizeGlass() {
+
+	elementGlass.style.position = 'absolute';
+	elementGlass.style.width    = elementMainCanvas.clientWidth + 'px';
+	elementGlass.style.height   = elementMainCanvas.clientHeight + 'px';	
+}
+//----------------------------------------------------------------
+function rednerImageSelector( xStart, yStart, xEnd, yEnd ) {
+	var	rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
+
+	elementImageSelector.style.left  = rect.x + 'px';
+	elementImageSelector.style.width = rect.width + 'px';
+	elementImageSelector.style.top    = rect.y + 'px';
+	elementImageSelector.style.height = rect.height + 'px';
+}
+//----------------------------------------------------------------
 function detectSelectedArea( xStart, yStart, xEnd, yEnd ) {
 	var rectangle = {};
 
 	if ( xStart < xEnd ) {
-		rectangle.x     = xStart;
+		rectangle.x     = Math.max( xStart, 1 ) + elementMainCanvas.offsetLeft;
 		rectangle.width = xEnd - xStart;
 	} else {
-		rectangle.x     = xEnd;			
+		rectangle.x     = Math.max( xEnd, 1 ) + elementMainCanvas.offsetLeft;			
 		rectangle.width = xStart - xEnd;			
-	}
+	}		
+	rectangle.width = Math.min( rectangle.width, elementMainCanvas.clientWidth - rectangle.x - 1 );
+
 	if ( yStart < yEnd ) {
-		rectangle.y      = yStart;
+		rectangle.y      = Math.max( yStart, 1 ) + elementMainCanvas.offsetTop;
 		rectangle.height = yEnd - yStart;
 	} else {
-		rectangle.y      = yEnd;
+		rectangle.y      = Math.max( yEnd, 1 ) + elementMainCanvas.offsetTop;
 		rectangle.height = yStart - yEnd;
 	}
+	rectangle.height = Math.min( rectangle.height, elementMainCanvas.clientHeight - rectangle.y - 1 );
 
 	return rectangle;
 }
@@ -243,7 +261,7 @@ function drawImage( fileName ) {
 function refreshTracker() {
 	if ( markup ) {
 		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-		elementTracker.innerText = '' + rect.width + ' x ' + rect.height + 'px';
+		elementTracker.innerText = '' + rect.width + ' x ' + rect.height + 'px' + ' x  = ' + rect.x + ' y  = ' + rect.y;
 	} else {
 		elementTracker.innerText = '';
 	}	
