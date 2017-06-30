@@ -25,7 +25,7 @@
 .cropper-button:hover {
 	box-shadow: 0 0 5px 3px rgb( 130, 168, 0 );
 }	
-.rightFloat {
+.right-float {
 	float: right;
 }
 .info-line {
@@ -56,9 +56,6 @@
 	padding: 10px;
 }
 #file-src {
-	width: 100px;
-	/*height: 10px;*/
-	/*visibility: hidden;*/
 }
 #url-src {
 	display: none;	
@@ -124,24 +121,15 @@
 }
 #image-wrapper {
 	z-index: -1;
-}
-#full-image-wrapper {
-	z-index: -2;
 	overflow: auto;
-}
-#image-wrapper img {
-	max-width: 100%;
-	max-height: 100%;
 }
 
 #cropped-container {
-/*	position: fixed;
-	display: none;
-*/
-	border: 1px solid green;
+	border: 1px solid blue;
 }
-#save-canvas {
-	border: 1px solid black;
+#save-canvas-wrapper {
+	height: 50vh;
+	overflow: auto;
 }
 #serv-link {
 	visibility: hidden;

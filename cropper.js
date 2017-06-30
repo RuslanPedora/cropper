@@ -13,7 +13,7 @@ var markup = false;
 var xStart, yStart, xEnd, yEnd;
 var canvasTop, canvasLeft;
 
-
+var compressCroppedArea = false;
 //document elements
 //----------------------------------------------------------------
 var mainCanvasEl      = document.getElementById( 'main-canvas' );
@@ -25,13 +25,12 @@ var imgFullEl = document.getElementById( 'full-img-buffer' );
 
 var cropAreaEl = document.getElementById( 'crop-area' );
 var glassEl         = document.getElementById( 'glass' );
-
-
 var paintContainerEl = document.getElementById( 'paint-container' );
+
+var compressCroppedAreaEl  = document.getElementById( 'compress-crop-area' );
 var switchBarEl  = document.getElementById( 'inner-mode-bar' );
 var imagePathEl   = document.getElementById( 'image-path' );
 var fileSrcEl    = document.getElementById( 'file-src' );
-
 var trackerEl    = document.getElementById( 'tracker' );
 
 
@@ -57,14 +56,15 @@ for ( var i = 0; i < scrModeSelectionEls.length; i++ ) {
 //----------------------------------------------------------------
 fileSrcEl.onchange = function( event ) {	
 	var fReader = new FileReader();
-	var fileNameShort = event.target.name;
+	var fileNameShort = event.target.value;
 
+	fileNameShort = fileNameShort.slice( fileNameShort.lastIndexOf( '\\' )  + 1 );
 	fReader.readAsDataURL( event.target.files[ 0 ]);
 
 	fReader.onloadend = ( event ) => {				
 		var fileName = event.target.result;
 
-		drawImage( fileName );		
+		drawImage( fileName, fileNameShort );		
 	}
 }
 //----------------------------------------------------------------
@@ -86,8 +86,8 @@ glassEl.onmousedown = function( event ) {
 	maxymizeGlass();
 
 	cropAreaEl.style.display = 'initial';
-	rednerImageSelector( xStart, yStart, xEnd, yEnd )
 
+	rednerCropArea( xStart, yStart, xEnd, yEnd )
 	refreshTracker();
 }
 //----------------------------------------------------------------
@@ -98,7 +98,7 @@ glassEl.onmousemove = function( event ) {
 		xEnd = Math.min( Math.max( event.offsetX - canvasLeft, 0 ), mainCanvasEl.clientWidth );
 		yEnd = Math.min( Math.max( event.offsetY - canvasTop, 0 ), mainCanvasEl.clientHeight );
 
-		rednerImageSelector( xStart, yStart, xEnd, yEnd );
+		rednerCropArea( xStart, yStart, xEnd, yEnd );
 		refreshTracker();
 	}
 		
@@ -106,40 +106,10 @@ glassEl.onmousemove = function( event ) {
 //----------------------------------------------------------------
 glassEl.onmouseup = function( event ) {
 
+	xEnd = Math.min( Math.max( event.offsetX - canvasLeft, 0 ), mainCanvasEl.clientWidth );
+	yEnd = Math.min( Math.max( event.offsetY - canvasTop, 0 ), mainCanvasEl.clientHeight );
 
-	if ( markup ) {
-		var drawingInputContext = mainCanvasEl.getContext( '2d' );
-		var drawingOutputContext;
-		var rect;
-		var areaToCopy;
-
-		markup = false;
-		xEnd = Math.min( Math.max( event.offsetX - canvasLeft, 0 ), mainCanvasEl.clientWidth );
-		yEnd = Math.min( Math.max( event.offsetY - canvasTop, 0 ), mainCanvasEl.clientHeight );
-
-		cropAreaEl.style.display = 'none';
-		minimizeGlass();
-		refreshTracker();
-
-		rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-
-		if ( rect.width == 0 || rect.height == 0 ) {
-			return;
-		}
-		
-		areaToCopy = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
-
-		saveCanvasEl.style.width = rect.width + 'px';
-		saveCanvasEl.style.height = rect.height + 'px';
-		saveCanvasEl.setAttribute( 'width', rect.width );
-		saveCanvasEl.setAttribute( 'height', rect.height );
-
-		drawingOutputContext = saveCanvasEl.getContext( '2d' );		
-		drawingOutputContext.clearRect( 0, 0, saveCanvasEl.clientWidth , saveCanvasEl.clientHeight );
-		drawingOutputContext.putImageData( areaToCopy, 0, 0 );		
-
-	}
-	
+	processCroppedArea();
 	refreshTracker();
 }
 //----------------------------------------------------------------
@@ -159,11 +129,8 @@ cancelButtonEl.onclick = function() {
 }
 //----------------------------------------------------------------
 replaceButtonEl.onclick = function() {
-	var drawingOutputContext = mainCanvasEl.getContext( '2d' );
-	var drawingInputContext = saveCanvasEl.getContext( '2d' );
-	var selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
-	
-	drawingOutputContext.putImageData( selectedArea, 0, 0 );		
+
+	replaceByCropppedImage();	
 }
 //----------------------------------------------------------------
 saveButtonEl.onclick = function() {
@@ -176,7 +143,7 @@ saveButtonEl.onclick = function() {
 }
 
 
-//processor
+//processors
 //----------------------------------------------------------------
 function maxymizeGlass() {
 
@@ -192,7 +159,7 @@ function minimizeGlass() {
 	glassEl.style.height   = mainCanvasEl.clientHeight + 'px';	
 }
 //----------------------------------------------------------------
-function rednerImageSelector( xStart, yStart, xEnd, yEnd ) {
+function rednerCropArea( xStart, yStart, xEnd, yEnd ) {
 	var	rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
 
 	cropAreaEl.style.left  = rect.x + 'px';
@@ -235,23 +202,57 @@ function cropSwticherOf() {
 	switchBarEl.style.width = SWITCHER_RADIUS + 'px';
 }
 //----------------------------------------------------------------
-function drawImage( fileName ) {
-	var drawingContext = mainCanvasEl.getContext( '2d' );
+function drawImage( fileName, shortFileName ) {
+	
 	imgBuferEl.src = fileName;
+
+	imgBuferEl.style.maxWidth = 'none';
+	imgBuferEl.style.maxHeight = 'none';
 	
 	imgBuferEl.onload = function() {
-		imagePathEl.value = fileName;
-		drawingContext.clearRect( 0, 0, mainCanvasEl.clientWidth , mainCanvasEl.clientHeight );
+		var drawingContext;
+			
+		fullImageCanvasEl.style.width = imgBuferEl.clientWidth + 'px';
+		fullImageCanvasEl.style.height = imgBuferEl.clientHeight + 'px';
+		fullImageCanvasEl.setAttribute( 'width', imgBuferEl.clientWidth );
+		fullImageCanvasEl.setAttribute( 'height', imgBuferEl.clientHeight );
+
+		drawingContext = fullImageCanvasEl.getContext( '2d' );
+		drawingContext.drawImage( imgBuferEl, 0, 0 );
+
+		if( imgBuferEl.clientWidth / paintContainerEl.clientWidth > 
+			imgBuferEl.clientHeight / paintContainerEl.clientHeight ) {
+			imgBuferEl.style.maxWidth = paintContainerEl.clientWidth;
+		} else {
+			imgBuferEl.style.maxHeight = paintContainerEl.clientHeight;
+		}				
+
+		document.getElementById( 'image-wrapper' ).style.zIndex = 10;
+		setTimeout( function() {
 
 		mainCanvasEl.style.width = imgBuferEl.clientWidth + 'px';
 		mainCanvasEl.style.height = imgBuferEl.clientHeight + 'px';
 		mainCanvasEl.setAttribute( 'width', imgBuferEl.clientWidth );
 		mainCanvasEl.setAttribute( 'height', imgBuferEl.clientHeight );
 
-		drawingContext.drawImage( imgBuferEl, 0, 0 );
+		drawingContext = mainCanvasEl.getContext( '2d' );
+		drawingContext.drawImage( imgBuferEl, 0, 0 );		
 
+		document.getElementById( 'image-wrapper' ).style.zIndex = -10;
+
+		}, 3000 );
+
+		imagePathEl.value = shortFileName;
 		cropSwticherOn();
+		minimizeGlass();
 	}; 
+
+	imgBuferEl.onresize = function() {
+		var q = 1;
+	}
+	imgBuferEl.onchange = function() {
+		var q = 1;
+	}
 }
 //----------------------------------------------------------------
 function refreshTracker() {
@@ -263,3 +264,90 @@ function refreshTracker() {
 	}	
 }	
 //----------------------------------------------------------------
+function replaceByCropppedImage() {
+	var drawingOutputContext = fullImageCanvasEl.getContext( '2d' );
+	var drawingInputContext = saveCanvasEl.getContext( '2d' );
+	var selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
+	var scaleX, scaleY, scale; 
+
+	fullImageCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
+	fullImageCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
+	fullImageCanvasEl.setAttribute( 'width', saveCanvasEl.clientWidth );
+	fullImageCanvasEl.setAttribute( 'height', saveCanvasEl.clientHeight );
+
+	drawingOutputContext.putImageData( selectedArea, 0, 0 );
+
+	scaleX = imgBuferEl.clientWidth / paintContainerEl.clientWidth;
+	scaleY = imgBuferEl.clientHeight / paintContainerEl.clientHeight;
+	scale = scaleX > scaleY ? scaleX : scaleY;
+
+	if( scale > 1 ) {
+		newWidth = saveCanvasEl.clientWidth / scale;
+		newHeight = saveCanvasEl.clientHeight / scale;
+		saveCanvasEl.style.width = newWidth + 'px';
+		saveCanvasEl.style.height = newHeight + 'px';
+		saveCanvasEl.setAttribute( 'width', newWidth );
+		saveCanvasEl.setAttribute( 'height', newHeight );
+	}	
+
+	selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
+	drawingOutputContext = mainCanvasEl.getContext( '2d' );
+
+	mainCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
+	mainCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
+	mainCanvasEl.setAttribute( 'width', saveCanvasEl.clientWidth );
+	mainCanvasEl.setAttribute( 'height', saveCanvasEl.clientHeight );
+
+	drawingOutputContext.putImageData( selectedArea, 0, 0 );
+	minimizeGlass();
+}
+//----------------------------------------------------------------
+function processCroppedArea() {
+	var drawingInputContext;
+	var drawingOutputContext;
+	var rect;
+	var areaToCopy;
+
+	if ( markup ) {
+
+		markup = false;
+
+		cropAreaEl.style.display = 'none';
+		minimizeGlass();
+		refreshTracker();
+
+		rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
+
+		if ( rect.width == 0 || rect.height == 0 ) {
+			return;
+		}
+
+
+		if ( compressCroppedAreaEl.checked ) {
+
+			drawingInputContext = mainCanvasEl.getContext( '2d' );
+			areaToCopy = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
+
+		} else {
+
+			rect.x = fullImageCanvasEl.clientWidth * rect.x / mainCanvasEl.clientWidth;
+			rect.width = fullImageCanvasEl.clientWidth * rect.width / mainCanvasEl.clientWidth;
+			rect.y = fullImageCanvasEl.clientHeight * rect.y / mainCanvasEl.clientHeight;
+			rect.height = fullImageCanvasEl.clientHeight * rect.height / mainCanvasEl.clientHeight;
+
+			drawingInputContext = fullImageCanvasEl.getContext( '2d' );
+
+		}
+
+		areaToCopy = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
+
+		saveCanvasEl.style.width = rect.width + 'px';
+		saveCanvasEl.style.height = rect.height + 'px';
+		saveCanvasEl.setAttribute( 'width', rect.width );
+		saveCanvasEl.setAttribute( 'height', rect.height );		
+
+		drawingOutputContext = saveCanvasEl.getContext( '2d' );		
+		drawingOutputContext.putImageData( areaToCopy, 0, 0 );		
+
+	}
+}

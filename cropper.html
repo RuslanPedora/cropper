@@ -34,6 +34,8 @@
 					<label>Browse<input id='file-src' type='file'>
 					</label>				 
 				</button>	
+				<br>
+				<input id='compress-crop-area' type='checkbox'>
 			</fieldset>
 		</form>
 
@@ -41,13 +43,13 @@
 			Target image
 			<span id='tracker'>
 			</span>
-			<div id='mode-bar' class='zero-font rightFloat'>
+			<div id='mode-bar' class='zero-font right-float'>
 				<div id='inner-mode-bar' class='zero-font'>
 					<div id='mode-pointer' class='zero-font'>
 					</div>
 				</div>
 			</div>
-			<span class='rightFloat'>
+			<span class='right-float'>
 				Crop mode
 			</span>			
 		</div>
@@ -61,36 +63,34 @@
 			</div>
 			<div id='image-wrapper'>
 				<img id='img-buffer'>				
-			</div>	
-			<div id='full-image-wrapper'>
-				<img id='full-img-buffer'>				
 				<canvas id='full-image-canvas'>
-				</canvas>
+				</canvas>				
 			</div>	
 		</div>
 		<div class='info-line'>
 		</div>
 
-
-		<div id='cropped-container'>
-			<div class='info-line'>
-				Confirm cropped image
-			</div>	
-			<div id='save-canvas-wrapper'>
-				<canvas id='save-canvas'  width=500 height=300>
-				</canvas>
-			<div>	
-			<button id='cancel-button' class='cropper-button'>
-				Cancel
-			</button>
-			<button id='replace-button' class='cropper-button'>
-				Replace
-			</button>
-			<button id='save-button' class='cropper-button'>
-				Save As
-			</button>
-			<a id='serv-link' href=''>utility</a>
-			<div class='info-line'>
+		<div id='modal-wrapper'>
+			<div id='cropped-container'>
+				<div class='info-line'>
+					Confirm cropped image
+				</div>	
+				<div id='save-canvas-wrapper'>
+					<canvas id='save-canvas'>
+					</canvas>
+				<div>	
+				<button id='cancel-button' class='cropper-button'>
+					Cancel
+				</button>
+				<button id='save-button' class='cropper-button right-float'>
+					Save As
+				</button>
+				<button id='replace-button' class='cropper-button right-float'>
+					Replace
+				</button>
+				<a id='serv-link' href=''>utility</a>
+				<div class='info-line'>
+				</div>
 			</div>
 		</div>
 
