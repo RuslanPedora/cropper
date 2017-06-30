@@ -11,57 +11,75 @@
 <body>
 <div id='app-container'>
 	<div id='main-container'>
-		<form id='src-form'>
+		<div class='info-line'>
+			Image Cropper
+		</div>
+		<form id='selection-form'>
 			<fieldset>
 				<legend>
 					Image source
 				</legend>
 				<label>				
-					<input type='radio' name='srcMode' value='local' checked>
+					<input type='radio' name='src-selection-mode' value='local' checked>
 					Local
 				</label>
 				<br>
 				<label>				
-					<input type='radio' name='srcMode' value='remote'>
+					<input type='radio' name='src-selection-mode' value='remote'>
 					Remote
 				</label>
 				<br>
-				<input id='image-src' type='text'>				
-				<button id='url-src' type='button' class='cropper-button'>Paste</button>
-				<button id='file-browse' class='cropper-button'>Browse</button>
-				<input id='file-src' type='file' class='cropper-button' value='Browse'> 
+				<input id='image-path' type='text'>				
+				<button id='file-browse' class='cropper-button' >
+					<label>Browse<input id='file-src' type='file'>
+					</label>				 
+				</button>	
 			</fieldset>
 		</form>
+
 		<div id='caption-bar'>
 			Target image
 			<span id='tracker'>
-
 			</span>
-			<div id='mode-bar' class='zero-font'>
+			<div id='mode-bar' class='zero-font rightFloat'>
 				<div id='inner-mode-bar' class='zero-font'>
 					<div id='mode-pointer' class='zero-font'>
 					</div>
 				</div>
 			</div>
+			<span class='rightFloat'>
+				Crop mode
+			</span>			
 		</div>
+
 		<div id='paint-container'>	
 			<canvas id='main-canvas'>
 			</canvas>
-			<div id='image-selector'>
+			<div id='crop-area'>
 			</div>
 			<div id='glass'>		
 			</div>
 			<div id='image-wrapper'>
 				<img id='img-buffer'>				
 			</div>	
+			<div id='full-image-wrapper'>
+				<img id='full-img-buffer'>				
+				<canvas id='full-image-canvas'>
+				</canvas>
+			</div>	
+		</div>
+		<div class='info-line'>
 		</div>
 
+
 		<div id='cropped-container'>
-			Confirm cropped image
-			<br>
-			<canvas id='save-canvas'  width=500 height=300>
-			</canvas>
-			<br>
+			<div class='info-line'>
+				Confirm cropped image
+			</div>	
+			<div id='save-canvas-wrapper'>
+				<canvas id='save-canvas'  width=500 height=300>
+				</canvas>
+			<div>	
 			<button id='cancel-button' class='cropper-button'>
 				Cancel
 			</button>
@@ -72,6 +90,8 @@
 				Save As
 			</button>
 			<a id='serv-link' href=''>utility</a>
+			<div class='info-line'>
+			</div>
 		</div>
 
 

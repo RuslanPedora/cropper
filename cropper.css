@@ -19,9 +19,21 @@
 	border-radius: 3px;
 	border: 1px solid rgb( 245, 245, 245 );
 }
+.cropper-button label {
+	cursor: pointer;
+}
 .cropper-button:hover {
 	box-shadow: 0 0 5px 3px rgb( 130, 168, 0 );
 }	
+.rightFloat {
+	float: right;
+}
+.info-line {
+	padding: 5px;
+	font-size: 15px;
+	background-color: rgba( 100, 100, 100, .5 );
+	min-height: 17px;
+}
 /*--------------------------------------------------------------------------------*/
 #app-container{
 	background-color: rgb( 245, 245, 245 );
@@ -29,7 +41,10 @@
 	min-height: 80vh;
 	user-select: none;
 }
-#src-form fieldset {
+#selection-form {
+	padding: 0;
+}
+#selection-form fieldset {
 	margin: 0;
 }
 #main-container {
@@ -37,15 +52,18 @@
 	max-width: 1200px;
 	margin: 0 auto;
 }
-#src-form {
+#selection-form {
 	padding: 10px;
 }
 #file-src {
+	width: 100px;
+	/*height: 10px;*/
+	/*visibility: hidden;*/
 }
 #url-src {
 	display: none;	
 }
-#image-src {
+#image-path {
 	width: 400px;
 }
 #caption-bar {
@@ -57,7 +75,6 @@
 	border-radius: 15px;
 	background: white;
 	position: relative;
-	float: right;	
 	padding: 0;
 }
 #inner-mode-bar {
@@ -82,35 +99,35 @@
 }
 #paint-container {
 	position: relative;
+	height: 500px;
 }
-#main-canvas, #glass, #image-wrapper, #save-canvas {
+#paint-container>* {
+	position: absolute;
+	top: 0;
+	left: 0;
 	width: 100%;
-	height: calc( 100% - 400px );
-}
+	height: 100%;
+}	
 #main-canvas {
 	background-color: white;
-	border: 1px solid black;
-	position: relative;
 	user-select: none;
 }
+#crop-area {
+	display: none;
+	border: 1px dashed black;
+	z-index: 1;
+}
 #glass {
-	position: absolute;
-	left: 0;
-	top: 0;
 	background-color: transparent;	
 	z-index: 2;
 	user-select: none;
 }
-#image-selector {
-	display: none;
-	position: absolute;
-	border: 1px dashed black;
-	z-index: 1;
-}
 #image-wrapper {
-	border: 1px solid black; 
-	position: absolute;
 	z-index: -1;
+}
+#full-image-wrapper {
+	z-index: -2;
+	overflow: auto;
 }
 #image-wrapper img {
 	max-width: 100%;
