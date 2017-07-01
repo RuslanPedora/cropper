@@ -29,13 +29,16 @@
 					Remote
 				</label>
 				<br>
-				<input id='image-path' type='text'>				
+				<input id='image-path' type='text' disabled>				
 				<button id='file-browse' class='cropper-button' >
-					<label>Browse<input id='file-src' type='file'>
-					</label>				 
+					Browse
+					<input id='file-src' type='file'>
 				</button>	
 				<br>
-				<input id='compress-crop-area' type='checkbox'>
+				<label id='compress-crop-area-wrapper'>
+					<input id='compress-crop-area' type='checkbox' disabled>
+					Compress cropped fragment to view size (aplicable for images which largler then view area)
+				</label>	
 			</fieldset>
 		</form>
 
@@ -78,7 +81,7 @@
 				<div id='save-canvas-wrapper'>
 					<canvas id='save-canvas'>
 					</canvas>
-				<div>	
+				</div>	
 				<button id='cancel-button' class='cropper-button'>
 					Cancel
 				</button>

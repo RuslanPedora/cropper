@@ -28,11 +28,13 @@ var glassEl         = document.getElementById( 'glass' );
 var paintContainerEl = document.getElementById( 'paint-container' );
 
 var compressCroppedAreaEl  = document.getElementById( 'compress-crop-area' );
+var compressCroppedAreaWrapEl  = document.getElementById( 'compress-crop-area-wrapper' );
 var switchBarEl  = document.getElementById( 'inner-mode-bar' );
 var imagePathEl   = document.getElementById( 'image-path' );
 var fileSrcEl    = document.getElementById( 'file-src' );
 var trackerEl    = document.getElementById( 'tracker' );
 
+var modalPopUpEl = document.getElementById( 'modal-wrapper' );
 
 var browseButtonEl  = document.getElementById( 'file-browse' );
 var cancelButtonEl  = document.getElementById( 'cancel-button' );
@@ -48,10 +50,27 @@ var scrModeSelectionEls = document.getElementsByName( 'src-selection-mode' );
 var srcModeHandler = function( event ) {
 
 	browseButtonEl.style.display = event.target.value === 'remote' ? 'none' : 'initial';
+	imagePathEl.disabled = event.target.value === 'remote' ? false : true;
 }
 
 for ( var i = 0; i < scrModeSelectionEls.length; i++ ) {
 	scrModeSelectionEls[ i ].onclick = srcModeHandler;
+}
+//----------------------------------------------------------------
+imagePathEl.oninput = function( event ) {
+	var q = 1;
+}
+//----------------------------------------------------------------
+imagePathEl.onpaste = function( event ) {
+	var pastedText = event.clipboardData.getData('Text');
+	if ( isValidURLImageName( pastedText ) ) {
+		drawImage( pastedText, pastedText );			
+	}
+	
+}
+//----------------------------------------------------------------
+fileSrcEl.onclick = function( event ) {
+	this.value = '';
 }
 //----------------------------------------------------------------
 fileSrcEl.onchange = function( event ) {	
@@ -64,7 +83,7 @@ fileSrcEl.onchange = function( event ) {
 	fReader.onloadend = ( event ) => {				
 		var fileName = event.target.result;
 
-		drawImage( fileName, fileNameShort );		
+		drawImage( fileName, fileNameShort );
 	}
 }
 //----------------------------------------------------------------
@@ -126,11 +145,13 @@ cancelButtonEl.onclick = function() {
 	var drawingOuputContext = saveCanvasEl.getContext( '2d' );
 	
 	drawingOuputContext.clearRect( 0, 0, saveCanvasEl.clientWidth , saveCanvasEl.clientHeight );
+	hidePopUp();
 }
 //----------------------------------------------------------------
 replaceButtonEl.onclick = function() {
 
 	replaceByCropppedImage();	
+	hidePopUp();
 }
 //----------------------------------------------------------------
 saveButtonEl.onclick = function() {
@@ -140,6 +161,7 @@ saveButtonEl.onclick = function() {
 	servLinkEl.download = 'cropped-image.png';
 	servLinkEl.href = dataURL.replace("image/png", "image/octet-stream");
 	servLinkEl.click();
+	hidePopUp();
 }
 
 
@@ -172,22 +194,22 @@ function detectSelectedArea( xStart, yStart, xEnd, yEnd ) {
 	var rectangle = {};
 
 	if ( xStart < xEnd ) {
-		rectangle.x     = Math.max( xStart, 1 ) + mainCanvasEl.offsetLeft;
+		rectangle.x     = Math.max( xStart, 0 ) + mainCanvasEl.offsetLeft;
 		rectangle.width = xEnd - xStart;
 	} else {
-		rectangle.x     = Math.max( xEnd, 1 ) + mainCanvasEl.offsetLeft;			
+		rectangle.x     = Math.max( xEnd, 0 ) + mainCanvasEl.offsetLeft;			
 		rectangle.width = xStart - xEnd;			
 	}		
-	rectangle.width = Math.min( rectangle.width, mainCanvasEl.clientWidth - rectangle.x - 1 );
+	rectangle.width = Math.min( rectangle.width, mainCanvasEl.clientWidth - rectangle.x - 2 );
 
 	if ( yStart < yEnd ) {
-		rectangle.y      = Math.max( yStart, 1 ) + mainCanvasEl.offsetTop;
+		rectangle.y      = Math.max( yStart, 0 ) + mainCanvasEl.offsetTop;
 		rectangle.height = yEnd - yStart;
 	} else {
-		rectangle.y      = Math.max( yEnd, 1 ) + mainCanvasEl.offsetTop;
+		rectangle.y      = Math.max( yEnd, 0 ) + mainCanvasEl.offsetTop;
 		rectangle.height = yStart - yEnd;
 	}
-	rectangle.height = Math.min( rectangle.height, mainCanvasEl.clientHeight - rectangle.y - 1 );
+	rectangle.height = Math.min( rectangle.height, mainCanvasEl.clientHeight - rectangle.y - 2 );
 
 	return rectangle;
 }
@@ -214,11 +236,21 @@ function drawImage( fileName, shortFileName ) {
 			
 		fullImageCanvasEl.style.width = imgBuferEl.clientWidth + 'px';
 		fullImageCanvasEl.style.height = imgBuferEl.clientHeight + 'px';
-		fullImageCanvasEl.setAttribute( 'width', imgBuferEl.clientWidth );
-		fullImageCanvasEl.setAttribute( 'height', imgBuferEl.clientHeight );
+		fullImageCanvasEl.width = imgBuferEl.clientWidth;
+		fullImageCanvasEl.height = imgBuferEl.clientHeight;
+
+
 
 		drawingContext = fullImageCanvasEl.getContext( '2d' );
 		drawingContext.drawImage( imgBuferEl, 0, 0 );
+
+		if ( imgBuferEl.clientWidth > paintContainerEl.clientWidth || imgBuferEl.clientHeight > paintContainerEl.clientHeight ) {
+			compressCroppedAreaEl.disabled = false;
+			compressCroppedAreaWrapEl.style.color = 'initial';
+		} else {
+			compressCroppedAreaEl.disabled = true;
+			compressCroppedAreaWrapEl.style.color = 'rgb( 200, 200, 200 )';
+		}
 
 		if( imgBuferEl.clientWidth / paintContainerEl.clientWidth > 
 			imgBuferEl.clientHeight / paintContainerEl.clientHeight ) {
@@ -227,20 +259,13 @@ function drawImage( fileName, shortFileName ) {
 			imgBuferEl.style.maxHeight = paintContainerEl.clientHeight;
 		}				
 
-		document.getElementById( 'image-wrapper' ).style.zIndex = 10;
-		setTimeout( function() {
-
 		mainCanvasEl.style.width = imgBuferEl.clientWidth + 'px';
 		mainCanvasEl.style.height = imgBuferEl.clientHeight + 'px';
-		mainCanvasEl.setAttribute( 'width', imgBuferEl.clientWidth );
-		mainCanvasEl.setAttribute( 'height', imgBuferEl.clientHeight );
+		mainCanvasEl.width = imgBuferEl.clientWidth;
+		mainCanvasEl.height = imgBuferEl.clientHeight;
 
 		drawingContext = mainCanvasEl.getContext( '2d' );
-		drawingContext.drawImage( imgBuferEl, 0, 0 );		
-
-		document.getElementById( 'image-wrapper' ).style.zIndex = -10;
-
-		}, 3000 );
+		drawingContext.drawImage( imgBuferEl, 0, 0, imgBuferEl.clientWidth, imgBuferEl.clientHeight );		
 
 		imagePathEl.value = shortFileName;
 		cropSwticherOn();
@@ -258,7 +283,7 @@ function drawImage( fileName, shortFileName ) {
 function refreshTracker() {
 	if ( markup ) {
 		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-		trackerEl.innerText = '   ' + rect.x + ',' + rect.y + ' --> ' + rect.width + ' x ' + rect.height + 'px';
+		trackerEl.innerText = '   ' + xStart + ',' + yStart + ' --> ' + rect.width + ' x ' + rect.height + 'px';
 	} else {
 		trackerEl.innerText = '';
 	}	
@@ -268,35 +293,56 @@ function replaceByCropppedImage() {
 	var drawingOutputContext = fullImageCanvasEl.getContext( '2d' );
 	var drawingInputContext = saveCanvasEl.getContext( '2d' );
 	var selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
-	var scaleX, scaleY, scale; 
+	var scaleX, scaleY, scale, newWidth, newHeight; 
 
 	fullImageCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
 	fullImageCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
-	fullImageCanvasEl.setAttribute( 'width', saveCanvasEl.clientWidth );
-	fullImageCanvasEl.setAttribute( 'height', saveCanvasEl.clientHeight );
+	fullImageCanvasEl.width = saveCanvasEl.clientWidth;
+	fullImageCanvasEl.height = saveCanvasEl.clientHeight;
 
 	drawingOutputContext.putImageData( selectedArea, 0, 0 );
 
-	scaleX = imgBuferEl.clientWidth / paintContainerEl.clientWidth;
-	scaleY = imgBuferEl.clientHeight / paintContainerEl.clientHeight;
+	scaleX = saveCanvasEl.clientWidth / paintContainerEl.clientWidth;
+	scaleY = saveCanvasEl.clientHeight / paintContainerEl.clientHeight;
 	scale = scaleX > scaleY ? scaleX : scaleY;
 
-	if( scale > 1 ) {
-		newWidth = saveCanvasEl.clientWidth / scale;
-		newHeight = saveCanvasEl.clientHeight / scale;
-		saveCanvasEl.style.width = newWidth + 'px';
-		saveCanvasEl.style.height = newHeight + 'px';
-		saveCanvasEl.setAttribute( 'width', newWidth );
-		saveCanvasEl.setAttribute( 'height', newHeight );
+	if( scale > 1 ) {		
+		newWidth = Math.round( saveCanvasEl.clientWidth / scale );
+		newHeight = Math.round( saveCanvasEl.clientHeight / scale );
+
+
+		var oldCanvas = saveCanvasEl.toDataURL("image/png");
+		var img = new Image();
+		img.src = oldCanvas;
+		img.onload = function (){
+
+			img.style.width = newWidth + 'px';
+			img.style.height = newHeight + 'px';
+
+			saveCanvasEl.style.width = newWidth + 'px';
+			saveCanvasEl.style.height = newHeight + 'px';
+			saveCanvasEl.width = newWidth;
+			saveCanvasEl.height = newHeight;		
+
+			mainCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
+			mainCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
+			mainCanvasEl.width = saveCanvasEl.clientWidth;
+			mainCanvasEl.height = saveCanvasEl.clientHeight;
+
+			drawingOutputContext = mainCanvasEl.getContext( '2d' );
+
+		    drawingOutputContext.drawImage(img, 0, 0);
+		}
+		return;
 	}	
 
-	selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
+	//selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
 	drawingOutputContext = mainCanvasEl.getContext( '2d' );
 
 	mainCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
 	mainCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
-	mainCanvasEl.setAttribute( 'width', saveCanvasEl.clientWidth );
-	mainCanvasEl.setAttribute( 'height', saveCanvasEl.clientHeight );
+	mainCanvasEl.width = saveCanvasEl.clientWidth;
+	mainCanvasEl.height = saveCanvasEl.clientHeight;
 
 	drawingOutputContext.putImageData( selectedArea, 0, 0 );
 	minimizeGlass();
@@ -343,11 +389,30 @@ function processCroppedArea() {
 
 		saveCanvasEl.style.width = rect.width + 'px';
 		saveCanvasEl.style.height = rect.height + 'px';
-		saveCanvasEl.setAttribute( 'width', rect.width );
-		saveCanvasEl.setAttribute( 'height', rect.height );		
+		saveCanvasEl.width = rect.width;
+		saveCanvasEl.height = rect.height;
 
 		drawingOutputContext = saveCanvasEl.getContext( '2d' );		
 		drawingOutputContext.putImageData( areaToCopy, 0, 0 );		
 
+		showPopUp();
 	}
+}
+//----------------------------------------------------------------
+function showPopUp() {
+
+	modalPopUpEl.style.width = '100vw';
+	modalPopUpEl.style.height = '100vh';
+	modalPopUpEl.style.visibility = 'visible';
+}
+//----------------------------------------------------------------
+function hidePopUp() {
+
+	modalPopUpEl.style.width = '.1px';
+	modalPopUpEl.style.height = '.1px';
+	modalPopUpEl.style.visibility = 'hidden';
+}
+//----------------------------------------------------------------
+function isValidURLImageName( pastedText ) {
+	return false;
 }
