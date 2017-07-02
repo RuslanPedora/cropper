@@ -57,7 +57,7 @@ var messageContentEl = document.getElementById( 'message-content' );
 //event handlers
 var srcModeHandler = function( event ) {
 
-	browseButtonEl.style.display = event.target.value === 'remote' ? 'none' : 'initial';
+	browseButtonEl.style.display = event.target.value === 'remote' ? 'none' : 'inline-block';
 	imagePathEl.disabled = event.target.value === 'remote' ? false : true;
 	hintEl.style.display = event.target.value === 'remote' ? 'initial' : 'none';
 	if ( event.target.value === 'remote' ) {
