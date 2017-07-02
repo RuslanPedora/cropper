@@ -32,8 +32,12 @@
 				<input id='image-path' type='text' disabled>				
 				<button id='file-browse' class='cropper-button' >
 					Browse
-					<input id='file-src' type='file'>
+					<input id='file-src' type='file' accept='image/*'>
 				</button>	
+				<div id='hint'>
+					<div></div>
+					Paste an image URL here
+				</div>				
 				<br>
 				<label id='compress-crop-area-wrapper'>
 					<input id='compress-crop-area' type='checkbox' disabled>
@@ -86,7 +90,7 @@
 					Cancel
 				</button>
 				<button id='save-button' class='cropper-button right-float'>
-					Save As
+					Save
 				</button>
 				<button id='replace-button' class='cropper-button right-float'>
 					Replace
@@ -96,8 +100,14 @@
 				</div>
 			</div>
 		</div>
-
-
+	</div>
+	<div id='message-box'>
+		<div id='message-closure'>
+			✖
+		</div>
+		<div id='message-content'>
+			message text
+		</div>
 	</div>
 </div>
 <script src='cropper.js'></script>

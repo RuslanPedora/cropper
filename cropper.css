@@ -43,7 +43,9 @@ body {
 	overflow: hidden;
 }
 #app-container{
-	background-color: rgb( 245, 245, 245 );
+	background-image: url( 'background.jpg' );	
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
 	width: 100%;
 	height: 100vh;
 	user-select: none;
@@ -55,8 +57,12 @@ body {
 #selection-form fieldset {
 	margin: 0;
 }
+#selection-form fieldset>label:not(:last-child) {
+	cursor: pointer;
+}
 #selection-form fieldset>label:not(:last-child) input {
-	margin-top: 10px;
+	margin-top: 10px;	
+	cursor: pointer;
 }	
 #main-container {
 	width: 95%;
@@ -82,13 +88,35 @@ body {
 	background-color: transparent;
 	z-index: 1
 }
-#url-src {
-	display: none;	
+#hint {
+	display: none;
+	padding: 3px 7px;
+	opacity: 0;
+	position: relative;
+	background-color: rgb( 130, 168, 0 );
+	color: white;
+	animation-name:	hintAnim;
+	animation-duration: .5s;
+	animation-fill-mode: forwards;	
 }
+@keyframes hintAnim {
+	from { opacity: 0; margin-left: 50px; }
+	to { opacity: 1; margin-left: 2px; }
+}
+#hint>div:first-child {
+	position: absolute;
+	left: -10px;
+	top: 6px;
+	border: 5px solid rgb( 130, 168, 0 );
+	font-family: Verdana, Geneva, sans-serif;
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+	border-left-color: transparent;
+}	
 #image-path {
 	padding: 5px;
 	font-size: 15px;
-	margin: 12px 10px 13px 0;
+	margin: 12px 0 13px 0;
 	width: 70%;
 	max-width: 500px;
 }
@@ -135,7 +163,8 @@ body {
 }
 #paint-container {
 	position: relative;
-	height: 500px;
+	height: 60vh;
+
 }
 #paint-container>* {
 	position: absolute;
@@ -152,6 +181,7 @@ body {
 	display: none;
 	border: 1px dashed black;
 	z-index: 1;
+	box-shadow: 0 0 1px 1px rgba( 100, 100, 100, .5 );
 }
 #glass {
 	background-color: transparent;	
@@ -186,11 +216,54 @@ body {
 	width: calc( 100% - 10px );
 	max-width: 1200px;
 	height: 70vh;
+	width: 0;
 	border: 1px solid black;
 	background-color: rgba( 245, 245, 245, .95 );
+	animation-name: cropAnim;
+	animation-duration: 1s;
+	animation-fill-mode: forwards;
+	opacity: 0;
+	display: none;
+}
+@keyframes cropAnim {
+	from { opacity: 0; width: 0; }
+	to { opacity: 1; width: 100%;}
 }
 #save-canvas-wrapper {
 	overflow: auto;
 	height: calc( 100% - 107px );
 	background-color: rgb( 250, 250, 250 );
+}
+#message-box {
+	position: fixed;
+	display: none;
+	width: 90vw;
+	max-width: 500px;	
+	padding: 15px;
+	font-family: Verdana, Geneva, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	border: 1px solid rgb( 31, 31, 31 );
+	background-color: rgba( 245, 245, 245, .95 );	
+	border-radius: 2px;
+	color: rgb( 31, 31, 31 );
+	opacity: 0;
+	animation-name:	messageAnim;
+	animation-duration: .5s;
+	animation-fill-mode: forwards;
+}
+#message-closure {
+	font-weight: bold;
+	position: absolute;
+	top: 3px;
+	right: 5px;
+	font-weight: bold;
+	cursor: pointer;
+}
+@keyframes messageAnim {
+	from { opacity: 0; top: 50px; }
+	to { opacity: 1; top: 100px; }
+}
+#message-box>div:last-child {
+	word-break: break-all;
 }

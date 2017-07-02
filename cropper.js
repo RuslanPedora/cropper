@@ -14,24 +14,30 @@ var xStart, yStart, xEnd, yEnd;
 var canvasTop, canvasLeft;
 
 var compressCroppedArea = false;
+var lastValidURL = '';
 //document elements
 //----------------------------------------------------------------
 var mainCanvasEl      = document.getElementById( 'main-canvas' );
 var saveCanvasEl      = document.getElementById( 'save-canvas' );
 var fullImageCanvasEl = document.getElementById( 'full-image-canvas' );
+var cacheCanvasEl      = document.getElementById( 'cache-canvas' );
 
 var imgBuferEl = document.getElementById( 'img-buffer' );
 var imgFullEl = document.getElementById( 'full-img-buffer' );
+var cacheImgEl      = document.getElementById( 'cache-img' );
 
 var cropAreaEl = document.getElementById( 'crop-area' );
 var glassEl         = document.getElementById( 'glass' );
 var paintContainerEl = document.getElementById( 'paint-container' );
+var cropContainerEl = document.getElementById( 'cropped-container' );
+
 
 var compressCroppedAreaEl  = document.getElementById( 'compress-crop-area' );
 var compressCroppedAreaWrapEl  = document.getElementById( 'compress-crop-area-wrapper' );
 var switchBarEl  = document.getElementById( 'inner-mode-bar' );
 var imagePathEl   = document.getElementById( 'image-path' );
 var fileSrcEl    = document.getElementById( 'file-src' );
+var hintEl = document.getElementById( 'hint' );
 var trackerEl    = document.getElementById( 'tracker' );
 
 var modalPopUpEl = document.getElementById( 'modal-wrapper' );
@@ -45,27 +51,44 @@ var servLinkEl      = document.getElementById( 'serv-link' );
 
 var scrModeSelectionEls = document.getElementsByName( 'src-selection-mode' );
 
-
+var messageBoxEl = document.getElementById( 'message-box' );
+var messageClosureEl = document.getElementById( 'message-closure' );
+var messageContentEl = document.getElementById( 'message-content' );
 //event handlers
 var srcModeHandler = function( event ) {
 
 	browseButtonEl.style.display = event.target.value === 'remote' ? 'none' : 'initial';
 	imagePathEl.disabled = event.target.value === 'remote' ? false : true;
+	hintEl.style.display = event.target.value === 'remote' ? 'initial' : 'none';
+	if ( event.target.value === 'remote' ) {
+		imagePathEl.value = '';
+	}
 }
 
 for ( var i = 0; i < scrModeSelectionEls.length; i++ ) {
 	scrModeSelectionEls[ i ].onclick = srcModeHandler;
 }
 //----------------------------------------------------------------
+messageClosureEl.onclick = function() {
+
+	hideMessage();
+}
+//----------------------------------------------------------------
 imagePathEl.oninput = function( event ) {
-	var q = 1;
+
+	imagePathEl.value = '';
 }
 //----------------------------------------------------------------
 imagePathEl.onpaste = function( event ) {
 	var pastedText = event.clipboardData.getData('Text');
-	if ( isValidURLImageName( pastedText ) ) {
-		drawImage( pastedText, pastedText );			
+
+	if ( !isValidURLImageName( pastedText ) ) {
+		showMessage( 'Wrong image URL name <br>' + pastedText + '<br> please paste an image URL' );
+		return;
 	}
+
+	lastValidURL = pastedText;
+	drawImage( pastedText, pastedText );			
 	
 }
 //----------------------------------------------------------------
@@ -76,6 +99,11 @@ fileSrcEl.onclick = function( event ) {
 fileSrcEl.onchange = function( event ) {	
 	var fReader = new FileReader();
 	var fileNameShort = event.target.value;
+
+	if ( !isValidFileName( fileNameShort ) ) {
+		showMessage( 'Wrong image file name <br>' + fileNameShort + '<br> please select an image file (.bmp|.jpg|.jpeg|.png|.tiff|.gif)' );
+		return;
+	}
 
 	fileNameShort = fileNameShort.slice( fileNameShort.lastIndexOf( '\\' )  + 1 );
 	fReader.readAsDataURL( event.target.files[ 0 ]);
@@ -225,11 +253,17 @@ function cropSwticherOf() {
 }
 //----------------------------------------------------------------
 function drawImage( fileName, shortFileName ) {
-	
-	imgBuferEl.src = fileName;
+	var cashSrc = imgBuferEl.src;	
 
 	imgBuferEl.style.maxWidth = 'none';
 	imgBuferEl.style.maxHeight = 'none';
+
+	imgBuferEl.crossOrigin = 'anonymous';
+	try {
+		imgBuferEl.src = fileName;
+	}
+	catch ( err ) {
+	}	
 	
 	imgBuferEl.onload = function() {
 		var drawingContext;
@@ -238,8 +272,6 @@ function drawImage( fileName, shortFileName ) {
 		fullImageCanvasEl.style.height = imgBuferEl.clientHeight + 'px';
 		fullImageCanvasEl.width = imgBuferEl.clientWidth;
 		fullImageCanvasEl.height = imgBuferEl.clientHeight;
-
-
 
 		drawingContext = fullImageCanvasEl.getContext( '2d' );
 		drawingContext.drawImage( imgBuferEl, 0, 0 );
@@ -272,18 +304,16 @@ function drawImage( fileName, shortFileName ) {
 		minimizeGlass();
 	}; 
 
-	imgBuferEl.onresize = function() {
-		var q = 1;
-	}
-	imgBuferEl.onchange = function() {
-		var q = 1;
+	imgBuferEl.onerror = function () {
+		showMessage( 'Image loading fail <br>' + shortFileName + '<br> wrong URL name or server doesn\'t support anonymous request' );
+		imagePathEl.value = '';
 	}
 }
 //----------------------------------------------------------------
 function refreshTracker() {
 	if ( markup ) {
 		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-		trackerEl.innerText = '   ' + xStart + ',' + yStart + ' --> ' + rect.width + ' x ' + rect.height + 'px';
+		trackerEl.innerText = '   ' + xStart + ',' + yStart + '	' + '❐ ' + rect.width + ' x ' + rect.height + 'px';
 	} else {
 		trackerEl.innerText = '';
 	}	
@@ -310,33 +340,31 @@ function replaceByCropppedImage() {
 		newWidth = Math.round( saveCanvasEl.clientWidth / scale );
 		newHeight = Math.round( saveCanvasEl.clientHeight / scale );
 
+		imgBuferEl.style.maxWidth = 'none';
+		imgBuferEl.style.maxHeight = 'none';
+		imgBuferEl.src = saveCanvasEl.toDataURL("image/png");
 
-		var oldCanvas = saveCanvasEl.toDataURL("image/png");
-		var img = new Image();
-		img.src = oldCanvas;
-		img.onload = function (){
+		imgBuferEl.onload = function (){
 
-			img.style.width = newWidth + 'px';
-			img.style.height = newHeight + 'px';
+			imgBuferEl.style.maxWidth = newWidth + 'px';
+			imgBuferEl.style.maxHeight = newHeight + 'px';
 
-			saveCanvasEl.style.width = newWidth + 'px';
-			saveCanvasEl.style.height = newHeight + 'px';
-			saveCanvasEl.width = newWidth;
-			saveCanvasEl.height = newHeight;		
-
-			mainCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
-			mainCanvasEl.style.height = saveCanvasEl.clientHeight + 'px';
-			mainCanvasEl.width = saveCanvasEl.clientWidth;
-			mainCanvasEl.height = saveCanvasEl.clientHeight;
+			mainCanvasEl.style.width = newWidth + 'px';
+			mainCanvasEl.style.height = newHeight + 'px';
+			mainCanvasEl.width = newWidth;
+			mainCanvasEl.height = newHeight;
 
 			drawingOutputContext = mainCanvasEl.getContext( '2d' );
 
-		    drawingOutputContext.drawImage(img, 0, 0);
+		    drawingOutputContext.drawImage( imgBuferEl, 0, 0, newWidth, newHeight );
 		}
-		return;
-	}	
 
-	//selectedArea = drawingInputContext.getImageData( 0, 0, saveCanvasEl.clientWidth, saveCanvasEl.clientHeight );
+		return;
+	} else {
+		compressCroppedAreaEl.disabled = true;
+		compressCroppedAreaWrapEl.style.color = 'rgb( 200, 200, 200 )';
+	}
+
 	drawingOutputContext = mainCanvasEl.getContext( '2d' );
 
 	mainCanvasEl.style.width = saveCanvasEl.clientWidth + 'px';
@@ -368,7 +396,6 @@ function processCroppedArea() {
 			return;
 		}
 
-
 		if ( compressCroppedAreaEl.checked ) {
 
 			drawingInputContext = mainCanvasEl.getContext( '2d' );
@@ -384,8 +411,13 @@ function processCroppedArea() {
 			drawingInputContext = fullImageCanvasEl.getContext( '2d' );
 
 		}
-
-		areaToCopy = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
+		try {
+			areaToCopy = drawingInputContext.getImageData( rect.x, rect.y, rect.width, rect.height );
+		}
+		catch ( errorObj ) {
+			showMessage( 'Unable to crop data '  + errorObj.name );
+			return;
+		}	
 
 		saveCanvasEl.style.width = rect.width + 'px';
 		saveCanvasEl.style.height = rect.height + 'px';
@@ -401,6 +433,7 @@ function processCroppedArea() {
 //----------------------------------------------------------------
 function showPopUp() {
 
+	cropContainerEl.style.display = 'initial';
 	modalPopUpEl.style.width = '100vw';
 	modalPopUpEl.style.height = '100vh';
 	modalPopUpEl.style.visibility = 'visible';
@@ -411,8 +444,23 @@ function hidePopUp() {
 	modalPopUpEl.style.width = '.1px';
 	modalPopUpEl.style.height = '.1px';
 	modalPopUpEl.style.visibility = 'hidden';
+	cropContainerEl.style.display = 'none';
+}
+//----------------------------------------------------------------
+function showMessage( text ) {
+	messageContentEl.innerHTML = text;
+	messageBoxEl.style.display = 'initial';
+	messageBoxEl.style.left = 'calc( 50% - ' + messageBoxEl.clientWidth / 2 + 'px )';
+}
+//----------------------------------------------------------------
+function hideMessage() {
+	messageBoxEl.style.display = 'none';
+}
+//----------------------------------------------------------------
+function isValidFileName( fileName ) {
+	return fileName.match( /(.bmp|.jpg|.jpeg|.png|.tiff|.gif)$/i );
 }
 //----------------------------------------------------------------
 function isValidURLImageName( pastedText ) {
-	return false;
+	return pastedText.match( /^(http[s]*\:\/\/)([\w.-]+)(\/[\w.-]+)*(.bmp|.jpg|.jpeg|.png|.tiff|.gif)$/i );
 }
