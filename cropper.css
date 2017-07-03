@@ -134,6 +134,9 @@ body {
 	background-color: rgb( 230, 230, 230 );
 	font-weight: bold;
 }
+#tracker {
+	font-size: 12px;
+}
 #mode-bar {
 	width: 60px;
 	height: 30px;
@@ -254,6 +257,7 @@ body {
 	animation-name:	messageAnim;
 	animation-duration: .5s;
 	animation-fill-mode: forwards;
+	z-index: 99;
 }
 #message-closure {
 	font-weight: bold;

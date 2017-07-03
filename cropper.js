@@ -185,13 +185,15 @@ replaceButtonEl.onclick = function() {
 saveButtonEl.onclick = function() {
 	var dataURL = saveCanvasEl.toDataURL( 'images/png' );
 
-	console.log( dataURL);
-	servLinkEl.download = 'cropped-image.png';
-	servLinkEl.href = dataURL.replace("image/png", "image/octet-stream");
+	servLinkEl.download = 'cropped-image.png';	
+	servLinkEl.href = dataURL;
 	servLinkEl.click();
-	hidePopUp();
+	if ( dataURL.length > 2000000 ) {
+		showMessage( 'Please for large image use \'Save as\' option directly on cropped image' );
+	} else {
+		hidePopUp();	
+	}
 }
-
 
 //processors
 //----------------------------------------------------------------
