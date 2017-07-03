@@ -315,7 +315,7 @@ function drawImage( fileName, shortFileName ) {
 function refreshTracker() {
 	if ( markup ) {
 		var rect = detectSelectedArea( xStart, yStart, xEnd, yEnd );
-		trackerEl.innerText = '   ' + xStart + ',' + yStart + '	' + '❐ ' + rect.width + ' x ' + rect.height + 'px';
+		trackerEl.innerText = '   ' + xStart + ',' + yStart + '	' + ' - ' + rect.width + ' x ' + rect.height + 'px';
 	} else {
 		trackerEl.innerText = '';
 	}	
